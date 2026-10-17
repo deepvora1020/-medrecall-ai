@@ -1,78 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MedRecall AI</title>
   <style>
-    :root { font-family: Inter, system-ui, -apple-system, sans-serif; color:#172033; background:#f5f8fc; }
-    * { box-sizing:border-box; }
-    body { margin:0; }
-    .wrap { max-width:900px; margin:auto; padding:28px 18px 60px; }
-    header { padding:28px 0 18px; }
-    .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:#e8f1ff; color:#2459a6; font-size:13px; font-weight:700; }
-    h1 { font-size:clamp(34px,7vw,58px); line-height:1.02; margin:16px 0 10px; }
-    .sub { font-size:18px; color:#5d687a; max-width:680px; line-height:1.55; }
-    .card { background:white; border:1px solid #e3e9f2; border-radius:20px; padding:20px; box-shadow:0 8px 30px rgba(28,50,80,.06); }
-    textarea { width:100%; min-height:150px; resize:vertical; border:1px solid #ccd6e5; border-radius:14px; padding:14px; font:inherit; font-size:16px; outline:none; }
-    textarea:focus { border-color:#4678c7; box-shadow:0 0 0 3px #e8f1ff; }
-    button { margin-top:12px; border:0; border-radius:12px; padding:12px 18px; background:#172033; color:white; font-weight:700; font-size:15px; cursor:pointer; }
-    button:disabled { opacity:.55; cursor:wait; }
-    .answer { margin-top:18px; white-space:pre-wrap; line-height:1.65; color:#283448; }
-    .examples { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-    .example { background:#f1f5fa; border:1px solid #dfe6ef; color:#34435a; border-radius:999px; padding:8px 11px; cursor:pointer; font-size:13px; }
-    footer { margin-top:18px; color:#7b8798; font-size:13px; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f5f7fb; color: #172033; }
+    main { max-width: 760px; margin: 0 auto; padding: 48px 20px; }
+    .card { background: white; border-radius: 18px; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+    h1 { margin-bottom: 8px; }
+    textarea { width: 100%; min-height: 150px; box-sizing: border-box; padding: 14px; border-radius: 12px; border: 1px solid #ccd3df; font: inherit; }
+    button { margin-top: 12px; padding: 12px 18px; border: 0; border-radius: 10px; background: #172033; color: white; font-weight: 700; }
+    .answer { white-space: pre-wrap; margin-top: 20px; line-height: 1.6; }
+    .chip { display: inline-block; margin: 5px 5px 0 0; padding: 8px 10px; border-radius: 999px; background: #eef2f8; cursor: pointer; font-size: 14px; }
+    footer { margin-top: 20px; font-size: 12px; color: #667085; }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <span class="badge">Open-source AI study tool</span>
-      <h1>MedRecall AI</h1>
-      <p class="sub">A focused study assistant for medical exam revision: ask a concept, compare differentials, or request a high-yield recall summary.</p>
-    </header>
-
-    <section class="card">
-      <textarea id="q" placeholder="Example: Explain nephrotic vs nephritic syndrome in an exam-focused way."></textarea>
-      <div class="examples">
-        <span class="example">Compare SIADH vs cerebral salt wasting</span>
-        <span class="example">Give 5-second recall for MI complications</span>
-        <span class="example">Explain why hyperkalemia causes ECG changes</span>
-      </div>
-      <button id="ask">Ask MedRecall AI</button>
-      <div id="answer" class="answer"></div>
-    </section>
-
+<main>
+  <div class="card">
+    <div>Open-source AI study tool</div>
+    <h1>MedRecall AI</h1>
+    <p>A focused AI assistant for medical exam revision.</p>
+    <div>
+      <span class="chip" data-q="Compare SIADH vs cerebral salt wasting">SIADH vs CSW</span>
+      <span class="chip" data-q="Give 5-second recall for MI complications">MI complications</span>
+      <span class="chip" data-q="Explain why hyperkalemia causes ECG changes">Hyperkalemia ECG</span>
+    </div>
+    <br />
+    <textarea id="question" placeholder="Ask a medical concept or exam question..."></textarea>
+    <button id="ask">Ask MedRecall AI</button>
+    <div id="answer" class="answer"></div>
     <footer>Educational tool. Not a substitute for professional medical advice.</footer>
-  </main>
-
+  </div>
+</main>
 <script>
-const q = document.getElementById("q");
-const answer = document.getElementById("answer");
-const ask = document.getElementById("ask");
-
-document.querySelectorAll(".example").forEach(el => {
-  el.onclick = () => q.value = el.textContent;
-});
-
-ask.onclick = async () => {
-  if (!q.value.trim()) return;
-  ask.disabled = true;
-  answer.textContent = "Thinking…";
-  try {
+  document.querySelectorAll(".chip").forEach(c =>
+    c.onclick = () => document.getElementById("question").value = c.dataset.q
+  );
+  document.getElementById("ask").onclick = async () => {
+    const question = document.getElementById("question").value;
+    const answer = document.getElementById("answer");
+    answer.textContent = "Thinking...";
     const r = await fetch("/api/ask", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({question:q.value})
+      body: JSON.stringify({question})
     });
     const data = await r.json();
-    answer.textContent = data.answer || data.error || "No answer returned.";
-  } catch {
-    answer.textContent = "Could not connect to the server.";
-  } finally {
-    ask.disabled = false;
-  }
-};
+    answer.textContent = data.answer || data.error || "Something went wrong.";
+  };
 </script>
 </body>
 </html>
