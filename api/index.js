@@ -5,7 +5,6 @@ import { fileURLToPath } from "url";
 import Anthropic from "@anthropic-ai/sdk";
 
 const app = express();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -16,42 +15,38 @@ const client = process.env.ANTHROPIC_API_KEY
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
 app.post("/api/ask", async (req, res) => {
   const { question } = req.body || {};
-
-  if (!question?.trim()) {
+  if (!question?.trim())
     return res.status(400).json({ error: "Enter a question." });
-  }
 
-  if (!client) {
+  if (!client)
     return res.json({
       answer: "Demo mode: add ANTHROPIC_API_KEY to enable Claude."
     });
-  }
 
   try {
     const message = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 700,
-      system:
-        "You are MedRecall AI, a concise medical exam study assistant.",
+      system: "You are MedRecall AI, a concise medical exam study assistant.",
       messages: [{ role: "user", content: question }]
     });
 
-    const answer = message.content
-      .filter(x => x.type === "text")
-      .map(x => x.text)
-      .join("\n");
-
-    res.json({ answer });
+    res.json({
+      answer: message.content
+        .filter(x => x.type === "text")
+        .map(x => x.text)
+        .join("\n")
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "AI request failed." });
   }
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
 export default app;
